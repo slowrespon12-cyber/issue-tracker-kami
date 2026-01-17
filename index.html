@@ -6,7 +6,7 @@
   <title>Issue Tracker Helpdesk (Google Sheets)</title>
 
   <style>
-    body
+    body {
       font-family: Arial, sans-serif;
       padding: 20px;
       background: #f9f9f9;
@@ -95,19 +95,11 @@
     © <span id="year"></span> Helpdesk Team
   </footer>
 
-  <!-- PapaParse -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
   <script>
     // =========================
-    // KONFIGURASI GOOGLE SHEET
+    // URL GOOGLE APPS SCRIPT
     // =========================
-    const sheetUrl =
-      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTWo0gRTTnJbNfx20pAkIQI7z6o4jW-TPjgv2mNYJjunjy1ndViQtOhkEuLk2h7Lw15BtdK5lJmsHl/pub?gid=0&single=true&output=csv";
-
-    const url =
-      "https://api.allorigins.win/raw?url=" +
-      encodeURIComponent(sheetUrl + "&t=" + Date.now());
+    const url = "PASTE_URL_WEB_APP_GOOGLE_APPS_SCRIPT_DI_SINI";
 
     let dataArticles = [];
     let activeIndex = null;
@@ -170,44 +162,30 @@
     }
 
     // =========================
-    // LOAD CSV
+    // FETCH DATA DARI APPS SCRIPT
     // =========================
     function fetchData() {
-      Papa.parse(url, {
-        download: true,
-        header: true,
-        skipEmptyLines: true,
-        complete: function (results) {
-          dataArticles = results.data.map(row => {
-            const clean = {};
-            Object.keys(row).forEach(
-              k => (clean[k.trim().toLowerCase()] = row[k])
-            );
-            return {
-              judul: clean.judul || "",
-              isi: clean.isi || ""
-            };
-          });
+      fetch(url)
+        .then(res => res.json())
+        .then(results => {
+          dataArticles = results.map(row => ({
+            judul: row.judul || "",
+            isi: row.isi || ""
+          }));
 
-          // Render ulang jika ada keyword di search
           const currentKeyword = document.getElementById("search").value;
           if (currentKeyword.trim() !== "") {
             renderArticles(currentKeyword);
           }
-        },
-        error: function () {
-          console.error("Gagal memuat data saat auto-refresh");
-        }
-      });
+        })
+        .catch(err => console.error("Gagal memuat data saat auto-refresh", err));
     }
 
     // Initial load
     fetchData();
 
-    // =========================
-    // AUTO REFRESH DATA SETIAP 5 MENIT
-    // =========================
-    setInterval(fetchData, 300000); // 300000 ms = 5 menit
+    // Auto refresh setiap 5 menit
+    setInterval(fetchData, 300000); // 5 menit
 
     // =========================
     // SEARCH EVENT
