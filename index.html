@@ -167,7 +167,6 @@ Papa.parse(SHEET_URL,{
   issues=r.data.map(x=>({
    issue:x.issue||"",
    solusi:x.solusi||"",
-   langkah:x.langkah||"",
    image_id:x.image_id||""
   })).filter(i=>i.issue);
  }
@@ -204,11 +203,6 @@ function render(data){
 <div class="section">
 <h4>Solusi</h4>
 ${nl(item.solusi)||"-"}
-</div>
-
-<div class="section">
-<h4>Langkah</h4>
-${nl(item.langkah)||"-"}
 </div>
 
 ${item.image_id && item.image_id!=="kosong"
