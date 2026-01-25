@@ -40,42 +40,24 @@ body{
  margin-bottom:10px;
 }
 
-/* BOOK */
 .book{
  font-size:56px;
- display:inline-block;
  animation:floatBook 3s ease-in-out infinite;
- text-shadow:0 4px 8px rgba(0,0,0,.25);
 }
 
-/* GEAR */
 .gear{
  position:absolute;
  right:-28px;
  bottom:-10px;
  font-size:34px;
  animation:spin 2.5s linear infinite;
- filter:drop-shadow(0 2px 4px rgba(0,0,0,.3));
 }
 
 /* ANIMATIONS */
 
-@keyframes spin{
- from{transform:rotate(0deg);}
- to{transform:rotate(360deg);}
-}
-
-@keyframes floatBook{
- 0%{transform:translateY(0);}
- 50%{transform:translateY(-6px);}
- 100%{transform:translateY(0);}
-}
-
-@keyframes glow{
- 0%{box-shadow:0 0 10px rgba(255,255,255,.3);}
- 50%{box-shadow:0 0 25px rgba(255,255,255,.6);}
- 100%{box-shadow:0 0 10px rgba(255,255,255,.3);}
-}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes floatBook{0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)}}
+@keyframes glow{0%{box-shadow:0 0 10px rgba(255,255,255,.3)}50%{box-shadow:0 0 25px rgba(255,255,255,.6)}100%{box-shadow:0 0 10px rgba(255,255,255,.3)}}
 
 /* INPUT */
 
@@ -88,7 +70,7 @@ input{
  margin-bottom:24px;
 }
 
-/* LIST */
+/* ISSUE */
 
 .issue-item{
  border:1px solid #e0e0e0;
@@ -105,9 +87,7 @@ input{
  background:#fafafa;
 }
 
-.issue-header:hover{
- background:#f1f8ff;
-}
+.issue-header:hover{background:#f1f8ff}
 
 .issue-detail{
  display:none;
@@ -115,11 +95,16 @@ input{
  border-top:1px dashed #cfd8dc;
 }
 
-.section{margin-bottom:14px;}
+.section{margin-bottom:14px}
 
 .section h4{
  margin:0 0 6px;
  color:#1565c0;
+}
+
+.issue-detail p{
+ white-space:pre-wrap;
+ line-height:1.6;
 }
 
 img{
@@ -142,15 +127,13 @@ img{
 <div class="container">
 
 <div class="header">
+ <div class="icon-wrap">
+  <span class="book">📘</span>
+  <span class="gear">⚙️</span>
+ </div>
 
-<div class="icon-wrap">
- <span class="book">📘</span>
- <span class="gear">⚙️</span>
-</div>
-
-<h1>Issue Tracker Helpdesk</h1>
-<p>Pusat solusi internal</p>
-
+ <h1>Issue Tracker Helpdesk</h1>
+ <p>Pusat solusi internal</p>
 </div>
 
 <input id="search" placeholder="Cari issue...">
@@ -164,8 +147,7 @@ img{
 <script>
 document.getElementById("year").textContent=new Date().getFullYear();
 
-const SHEET_URL=
-"https://docs.google.com/spreadsheets/d/e/2PACX-1vQCLXvz4_F7EfUppPoKWSKQawlesCjiYHhceQCIEDoV8ntbDjFrvKUorP416AGydpWYmxWlOLA3b1JL/pub?gid=0&single=true&output=csv&t="+Date.now();
+const SHEET_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQCLXvz4_F7EfUppPoKWSKQawlesCjiYHhceQCIEDoV8ntbDjFrvKUorP416AGydpWYmxWlOLA3b1JL/pub?gid=0&single=true&output=csv&t="+Date.now();
 
 let issues=[];
 let opened=null;
@@ -178,14 +160,19 @@ Papa.parse(SHEET_URL,{
 
   issues=res.data.map(r=>({
    issue:r.issue?.trim()||"",
-   solusi:r.solusi?.trim()||"",
-   langkah:r.langkah?.trim()||"",
-   image_id:r.image_id?.trim()||""
+   solusi:r.solusi||"",
+   langkah:r.langkah||"",
+   image_id:r.image_id||""
   })).filter(i=>i.issue);
 
-  render(issues);
+  render([]); // kosong dulu
  }
 });
+
+/* LINKIFY */
+function linkify(text){
+ return text.replace(/(https?:\/\/[^\s]+)/g,'<a href="$1" target="_blank">$1</a>');
+}
 
 function render(data){
 
@@ -193,7 +180,7 @@ function render(data){
  list.innerHTML="";
 
  if(!data.length){
-  list.innerHTML="<div style='color:#999'>Issue tidak ditemukan</div>";
+  list.innerHTML="";
   return;
  }
 
@@ -212,12 +199,12 @@ function render(data){
   detail.innerHTML=`
    <div class="section">
     <h4>Solusi</h4>
-    <p>${item.solusi||"-"}</p>
+    <p>${linkify(item.solusi)}</p>
    </div>
 
    <div class="section">
     <h4>Langkah</h4>
-    <p>${item.langkah||"-"}</p>
+    <p>${linkify(item.langkah)}</p>
    </div>
 
    ${
@@ -239,8 +226,15 @@ function render(data){
  });
 }
 
+/* SEARCH ONLY ISSUE */
 document.getElementById("search").addEventListener("input",e=>{
- const k=e.target.value.toLowerCase();
+ const k=e.target.value.toLowerCase().trim();
+
+ if(!k){
+  render([]);
+  return;
+ }
+
  render(issues.filter(i=>i.issue.toLowerCase().includes(k)));
 });
 </script>
