@@ -167,7 +167,7 @@ Papa.parse(SHEET_URL,{
   issues=r.data.map(x=>({
    issue:x.issue||"",
    solusi:x.solusi||"",
-   image_id:x.image_id||""
+   image_id:x.image_id?.trim()||""
   })).filter(i=>i.issue);
  }
 });
@@ -206,7 +206,7 @@ ${nl(item.solusi)||"-"}
 </div>
 
 ${item.image_id && item.image_id!=="kosong"
-?`<img src="https://drive.google.com/uc?id=${item.image_id}">`
+?`<img src="<img src="https://drive.google.com/thumbnail?id=${item.image_id}&sz=w1000">`
 :""}
 `;
 
