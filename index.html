@@ -53,7 +53,7 @@ body{
  animation:spin 2.5s linear infinite;
 }
 
-/* ANIMASI */
+/* ANIMATION */
 
 @keyframes spin{
  from{transform:rotate(0)}
@@ -87,6 +87,7 @@ input{
  border:1px solid #e0e0e0;
  border-radius:10px;
  margin-bottom:14px;
+ overflow:hidden;
 }
 
 .issue-header{
@@ -154,10 +155,15 @@ img{
 <script>
 document.getElementById("year").textContent=new Date().getFullYear();
 
-const SHEET_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQCLXvz4_F7EfUppPoKWSKQawlesCjiYHhceQCIEDoV8ntbDjFrvKUorP416AGydpWYmxWlOLA3b1JL/pub?gid=0&single=true&output=csv&t="+Date.now();
+/* GOOGLE SHEET CSV */
+
+const SHEET_URL =
+"https://docs.google.com/spreadsheets/d/e/2PACX-1vQCLXvz4_F7EfUppPoKWSKQawlesCjiYHhceQCIEDoV8ntbDjFrvKUorP416AGydpWYmxWlOLA3b1JL/pub?gid=0&single=true&output=csv&t="+Date.now();
 
 let issues=[];
 let opened=null;
+
+/* LOAD SHEET */
 
 Papa.parse(SHEET_URL,{
  download:true,
@@ -165,17 +171,20 @@ Papa.parse(SHEET_URL,{
  skipEmptyLines:true,
  complete:r=>{
   issues=r.data.map(x=>({
-   issue:x.issue||"",
-   solusi:x.solusi||"",
-   image_id:x.image_id?.trim()||""
+   issue:(x.issue||"").trim(),
+   solusi:(x.solusi||"").trim(),
+   image_id:(x.image_id||"").trim()
   })).filter(i=>i.issue);
  }
 });
 
-/* convert newline sheet -> html */
+/* newline -> <br> */
+
 function nl(t){
  return t.replace(/\n/g,"<br>");
 }
+
+/* RENDER */
 
 function render(data){
 
@@ -206,7 +215,7 @@ ${nl(item.solusi)||"-"}
 </div>
 
 ${item.image_id && item.image_id!=="kosong"
-?`<img src="<img src="https://drive.google.com/thumbnail?id=${item.image_id}&sz=w1000">`
+?`<img src="https://drive.google.com/thumbnail?id=${item.image_id}&sz=w1200">`
 :""}
 `;
 
