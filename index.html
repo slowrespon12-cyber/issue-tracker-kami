@@ -1,145 +1,120 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Issue Tracker Helpdesk</title>
+<meta charset="UTF-8">
+<title>Issue & Solusi</title>
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f9f9f9;
-    }
-    input {
-      width: 100%;
-      padding: 10px;
-      font-size: 16px;
-      margin-bottom: 15px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    .article {
-      background: white;
-      border-radius: 6px;
-      margin-bottom: 10px;
-      border: 1px solid #ddd;
-      overflow: hidden;
-    }
-    .article h3 {
-      margin: 0;
-      padding: 12px;
-      cursor: pointer;
-      background: #f1f1f1;
-    }
-    .content {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.4s ease, padding 0.3s ease;
-      padding: 0 12px;
-    }
-    .content.open {
-      padding: 12px;
-      max-height: 1000px;
-    }
-    .content img {
-      max-width: 100%;
-      border-radius: 6px;
-      margin-bottom: 10px;
-    }
-    mark {
-      background: yellow;
-    }
-  </style>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f6f7f9;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  max-width: 900px;
+  margin: 40px auto;
+  background: #fff;
+  padding: 30px;
+  border-radius: 8px;
+}
+
+input {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+.issue-title {
+  font-size: 22px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.section {
+  margin-top: 20px;
+}
+
+.section h4 {
+  margin-bottom: 6px;
+}
+
+img {
+  max-width: 100%;
+  border-radius: 6px;
+  margin-top: 10px;
+}
+
+.not-found {
+  color: #999;
+  margin-top: 20px;
+}
+</style>
 </head>
 
 <body>
+<div class="container">
 
-<h2>📚 Issue Tracker Helpdesk</h2>
+  <input id="search" placeholder="Cari issue..." />
 
-<input id="search" placeholder="Cari judul artikel..." />
+  <div id="result"></div>
 
-<div id="list"><p>Memuat data...</p></div>
+</div>
 
 <script>
-  const API_KEY = "AIzaSyCP1doJdwsMteYt1pylBjOWnRMAsZ5o4IU";
-  const SHEET_ID = "1DGR6pjJvvasX9OO0W5TuEhyatDAe7vjtnmfeubBZ65E";
-  const SHEET_NAME = "Sheet1";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQTWo0gRTTnJbNfx20pAkIQI7z6o4jW-TPjgv2mNYJjunjy1ndViQtOhkEuLk2h7Lw15BtdK5lJmsHl/pub?gid=0&single=true&output=csv";
+let issues = [];
 
-  const apiUrl =
-    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
-
-  let dataArticles = [];
-  let activeIndex = null;
-
-  function highlight(text, keyword) {
-    if (!keyword) return text;
-    const regex = new RegExp(`(${keyword})`, "gi");
-    return text.replace(regex, "<mark>$1</mark>");
-  }
-
-  function toggle(index) {
-    if (activeIndex !== null && activeIndex !== index) {
-      document.getElementById("content-" + activeIndex)?.classList.remove("open");
-    }
-    const el = document.getElementById("content-" + index);
-    el.classList.toggle("open");
-    activeIndex = el.classList.contains("open") ? index : null;
-  }
-
-  function renderArticles(keyword) {
-    const list = document.getElementById("list");
-    list.innerHTML = "";
-
-    const filtered = dataArticles.filter(item =>
-      item.judul.toLowerCase().includes(keyword.toLowerCase())
-    );
-
-    if (!filtered.length) {
-      list.innerHTML = "<p>Tidak ada artikel ditemukan.</p>";
-      return;
-    }
-
-    filtered.forEach((item, index) => {
-      list.innerHTML += `
-        <div class="article">
-          <h3 onclick="toggle(${index})">
-            ${highlight(item.judul, keyword)}
-          </h3>
-          <div class="content" id="content-${index}">
-            ${item.gambar ? `<img src="${item.gambar}">` : ""}
-            <div>${item.isi}</div>
-          </div>
-        </div>
-      `;
+fetch(SHEET_URL)
+  .then(res => res.text())
+  .then(csv => {
+    const rows = csv.split("\n").slice(1);
+    rows.forEach(r => {
+      const [issue, solusi, langkah, image_id] = r.split(",");
+      issues.push({ issue, solusi, langkah, image_id });
     });
-  }
-
-  fetch(apiUrl)
-    .then(res => res.json())
-    .then(data => {
-      const rows = data.values;
-      rows.shift();
-
-      dataArticles = rows.map(r => ({
-        judul: r[0] || "",
-        isi: r[1] || "",
-        gambar: r[2] || ""
-      }));
-
-      document.getElementById("list").innerHTML =
-        "<p>Ketik kata kunci untuk mencari artikel.</p>";
-    })
-    .catch(err => {
-      console.error(err);
-      document.getElementById("list").innerHTML =
-        "<p>Gagal memuat data</p>";
-    });
-
-  document.getElementById("search").addEventListener("keyup", e => {
-    activeIndex = null;
-    renderArticles(e.target.value);
   });
+
+document.getElementById("search").addEventListener("input", function () {
+  const keyword = this.value.toLowerCase();
+  const result = document.getElementById("result");
+  result.innerHTML = "";
+
+  if (!keyword) return;
+
+  const found = issues.find(i =>
+    i.issue.toLowerCase().includes(keyword)
+  );
+
+  if (!found) {
+    result.innerHTML = `<div class="not-found">Issue tidak ditemukan</div>`;
+    return;
+  }
+
+  const imgHTML = found.image_id
+    ? `<img src="https://drive.google.com/uc?id=${found.image_id}">`
+    : "";
+
+  result.innerHTML = `
+    <div class="issue-title">${found.issue}</div>
+
+    <div class="section">
+      <h4>Solusi</h4>
+      <p>${found.solusi}</p>
+    </div>
+
+    <div class="section">
+      <h4>Langkah-langkah</h4>
+      <p>${found.langkah}</p>
+    </div>
+
+    ${imgHTML}
+  `;
+});
 </script>
 
 </body>
